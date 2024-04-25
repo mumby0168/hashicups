@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp-demoapp/hashicups-client-go"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -15,7 +16,8 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ provider.Provider = &hashicupsProvider{}
+	_ provider.Provider              = &hashicupsProvider{}
+	_ provider.ProviderWithFunctions = &hashicupsProvider{}
 )
 
 type hashicupsProviderModel struct {
@@ -39,6 +41,13 @@ type hashicupsProvider struct {
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
+}
+
+// Functions implements provider.ProviderWithFunctions.
+func (p *hashicupsProvider) Functions(context.Context) []func() function.Function {
+	return []func() function.Function{
+		NewComputeTaxFunction,
+	}
 }
 
 // Metadata returns the provider type name.
@@ -184,12 +193,14 @@ func (p *hashicupsProvider) Configure(ctx context.Context, req provider.Configur
 
 // DataSources defines the data sources implemented in the provider.
 func (p *hashicupsProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource {
+	return []func() datasource.DataSource{
 		NewCoffeesDataSource,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *hashicupsProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewOrderResource,
+	}
 }
